@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+		<title>index</title>
+		<link rel="stylesheet" type="text/css"  href="/style/dropdown.css">
+	</head>
+	<body>
+	<!-- Load an icon library -->
+	<!-- arrow -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<!-- The sidebar -->
+	<?php include 'php/sidebar.php'; ?>
+		<main>
+			Welcome! 
+			<br>
+			<br> 
+			If you would like to establish or shut a connection with a wireless device 
+			<br> 
+			click on the link "Clients" on the sidebar menu.
+			<br> 
+			<br> 
+			The dropdownmenu "Logs" lists the available wireless devices.
+			<br> 
+			<br> 
+			To shutdown the gateway close open connections and click on the link "Shutdown" on the sidebar menu.
+		
+			<p>Date/Time: <span id="datetime"></span></p>
+		</main>
+	</body>
+	<script src="js/dropdown.js"></script>
+	<script> <!-- Date/Time -->  
+		var dt = new Date();
+		document.getElementById("datetime").innerHTML = (("0"+dt.getDate()).slice(-2)) +"."+ (("0"+(dt.getMonth()+1)).slice(-2)) +"."+ (dt.getFullYear()) +" "+ (("0"+dt.getHours()).slice(-2)) +":"+ (("0"+dt.getMinutes()).slice(-2));
+	</script>
+</html>

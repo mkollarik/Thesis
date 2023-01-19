@@ -1,0 +1,243 @@
+<?php
+	if(isset($_POST['start1']))
+	{
+		$mystring  = exec('/home/pi/code/saveTest.py > /dev/null 2>&1 &');
+		sleep(5);
+		exec('pgrep saveTest.py', $output);
+	//******************Debugging lines**********************************
+	//	$mystring = exec('/home/pi/code/saveTest.py > /dev/null 2>&1 &', $output);
+	//	var_dump($output);
+	//*******************END*********************************************
+	
+		if($output)
+		{
+			echo '<script>alert("Successfully connected!")</script>';
+		} 
+		else 
+		{
+			echo '<script>alert("Can not connect to Arduino -> Please check connection")</script>';
+		}
+	
+		//exec("sudo pkill python"); idk why sudo and python processes are started tbh (command for showing running python processes pgrep -lf python)
+	
+	}
+	if(isset($_POST['stop1'])){
+		exec("sudo pkill saveTest");
+	}
+?>
+
+<?php
+	if(isset($_POST['start2']))
+	{
+		$mystring = exec('/home/pi/code/checkdaily.py > /dev/null 2>&1 &');
+
+	//******************Debugging lines**********************************
+	//	$mystring = exec('/home/pi/code/checkdaily.py 2>&1', $output);
+	//	var_dump($output);
+	//*******************END*********************************************
+
+		if(!$mystring)
+		{
+			echo '<script>alert("Successfully executed!")</script>';
+		} 
+		else 
+		{
+			echo '<script>alert("Something went wrong")</script>';
+		}
+
+		//$command = exec('/home/pi/code/checkdaily.py > /dev/null 2>&1 &');
+	}
+	if(isset($_POST['stop2'])){
+		exec("sudo pkill checkdaily");
+	}
+?>
+
+<html>
+	<head>
+		<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">    
+		<!-- for the sidebar -->
+		<meta http-equiv="refresh" content="30"> <!-- Automatic refresh after 10 seconds -->  
+		<title>Clients</title>   
+		<link rel="stylesheet" type="text/css"  href="style/dropdown.css">
+	</head>
+	<style>
+		table {
+			border-collapse: collapse;
+			width: 90%;  /*whichever width you want */
+			/*margin-left: 200px; /* minus the amount to make it 100% */
+			color: #588c7e;
+			font-family: monospace;
+			font-size: 18px;
+			text-align: left;
+		}
+
+		th {
+			background-color: #588c7e;
+			color: white;
+		}
+
+		tr:nth-child(even) {background-color: #f2f2f2}
+
+		table .absorbing-column {
+    			width: 100%;
+		}
+
+		.button {
+			border: none;
+			color: white;
+			padding: 15px 32px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 16px;
+			margin: 4px 2px;
+			cursor: pointer;
+		}
+
+		.button1 {background-color: #4CAF50;} /* Green */
+		.button2 {background-color: #008CBA;} /* Blue */
+		
+		input[type=submit] {
+			-webkit-appearance: none;
+			appearance: none;
+			background: grey;
+			border: none;
+			color: white;
+			padding: 10px 20px;
+			text-decoration: none;
+			margin: 4px 4px;
+			cursor: pointer;
+		}
+		
+	</style>
+	<body>
+		<!-- Load an icon library -->
+		<!-- arrow -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<!-- The sidebar -->
+		<?php include 'php/sidebar.php'; ?>
+		<table style="margin-left:200px">
+			<tr>
+				<td>ATmega8L Data</td>
+				<td>
+					<form action="" method="post">
+						<input type="submit" name="start1" id="start1" value="start" />
+						<input type="submit" name="stop1" id="stop1" value="stop" />
+					</form>
+				<td>
+					<table>
+						<tr>
+							<th>id</th>
+							<th>date/time</th>
+							<th>Temperature [°C]</th>
+							<th>Air Pressure [Pa]</th>
+							<th>ADCValue</th>
+						</tr>
+
+						<?php
+							$db = new SQLite3("/home/pi/code/IoT.db");	
+							$query = "SELECT * FROM ATMEGA8_Data ORDER BY rowid DESC LIMIT 1";
+							$res =  $db->query($query) or die;
+							$dsatz = $res->fetchArray(SQLITE3_ASSOC);
+							$count = $db->querySingle("SELECT COUNT(*) as count FROM ATMEGA8_Data");
+
+							if($count > 0)
+							{	        		
+								echo "<tr><td>" . $dsatz["id"] . "</td><td>"
+												. $dsatz["Date"] . "</td><td>" 
+												. round($dsatz["Temperature"],2) . "</td><td>" 
+												. $dsatz["Pressure"] . "</td><td>"
+												. $dsatz["ADCValue"] . "</td></tr>";
+							}
+							else 
+							{	
+								echo "0 results";
+							}
+							$db->close();
+						?>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td>Status Updates</td>
+				<td>
+					<form action="" method="post">
+						<input type="submit" name="start2" id="start2" value="start" />
+						<input type="submit" name="stop2" id="stop2" value="stop" />
+					</form>
+			</tr>
+		</table>
+		<p style="margin-left:200px">Date/Time: <span id="datetime"></span></p>
+		<p style="margin-left:200px">Refresh in: <span id='countdown'></span>s</p>
+	</body> 
+	
+	<!-- for the sidebar -->
+	<script src="js/dropdown.js"></script>
+	<script> <!-- Date/Time -->  
+		var dt = new Date();
+		document.getElementById("datetime").innerHTML = (("0"+dt.getDate()).slice(-2)) +"."+ (("0"+(dt.getMonth()+1)).slice(-2)) +"."+ (dt.getFullYear()) +" "+ (("0"+dt.getHours()).slice(-2)) +":"+ (("0"+dt.getMinutes()).slice(-2));
+	</script>
+	<script> <!-- change button color on click to show if python script active -->  
+		window.onload=function()
+		{
+			startbtn1.style.backgroundColor=localStorage.getItem("startbtncolor1");
+			stopbtn1.style.backgroundColor=localStorage.getItem("stopbtncolor1");
+			startbtn2.style.backgroundColor=localStorage.getItem("startbtncolor2");
+			stopbtn2.style.backgroundColor=localStorage.getItem("stopbtncolor2");
+		}
+		
+		const startbtn1 = document.getElementById('start1');
+		const stopbtn1 = document.getElementById('stop1');
+		
+		const startbtn2 = document.getElementById('start2');
+		const stopbtn2 = document.getElementById('stop2');
+
+		startbtn1.addEventListener('click', function onClick() 
+		{
+			startbtn1.style.backgroundColor = 'green';
+			startbtn1.style.color = 'white';
+			localStorage.setItem("startbtncolor1","green");
+			localStorage.removeItem('stopbtncolor1');
+		});
+		
+		stopbtn1.addEventListener('click', function onClick() 
+		{
+			stopbtn1.style.backgroundColor = 'red';
+			stopbtn1.style.color = 'white';
+			localStorage.setItem("stopbtncolor1","red");
+			localStorage.removeItem('startbtncolor1');
+		});
+		
+		startbtn2.addEventListener('click', function onClick() 
+		{
+			startbtn2.style.backgroundColor = 'green';
+			startbtn2.style.color = 'white';
+			localStorage.setItem("startbtncolor2","green");
+			localStorage.removeItem('stopbtncolor2');
+		});
+		
+		stopbtn2.addEventListener('click', function onClick() 
+		{
+			stopbtn2.style.backgroundColor = 'red';
+			stopbtn2.style.color = 'white';
+			localStorage.setItem("stopbtncolor2","red");
+			localStorage.removeItem('startbtncolor2');
+		});
+	</script>
+	
+	<script> <!-- Automatic refresh after x seconds -->  
+		var countDown = 30;
+
+		function countdown() {
+			setInterval(function () {
+				if (countDown == 0) {
+					return;
+				}
+				countDown--;
+				document.getElementById('countdown').innerHTML = countDown;
+				return countDown;
+			}, 1000);
+		}
+		countdown();
+	</script>
+</html>  

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<!-- for the sidebar -->
+	<link rel="stylesheet" type="text/css"  href="style/dropdown.css">
+	<title>Table with database</title>
+		<style>
+			table {
+				border-collapse: collapse;
+				width: 100%; /* whichever width you want */
+				//margin-left: 200px; /* minus the amount to make it 100% */
+				color: #588c7e;
+				font-family: monospace;
+				font-size: 25px;
+				text-align: left;
+			}
+			
+			th {
+				background-color: #588c7e;
+				color: white;
+			}
+			tr:nth-child(even) {background-color: #f2f2f2}
+				
+			.chart-container {
+				display: block;
+				float: none;
+				width: 100%;
+				margin-top: 0px;
+				margin-right:0px;
+				margin-left:0px;
+				//height: 50%;
+				height:80vh;
+			}	
+		</style>
+	</head>
+	<body>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<!-- The sidebar -->
+		<?php include 'php/sidebar.php'; ?>
+		<details style="margin-left:200px">
+		<summary>Data history - Table</summary>
+			<table>
+				<tr>
+					<th>id</th>
+					<th>date/time</th>
+					<th>Temperature [°C]</th>
+					<th>Air Pressure [Pa]</th>
+					<th>ADCValue</th>
+				</tr>
+				<?php
+					$db = new SQLite3("/home/pi/Store_MQTT_Data_in_Database/IoT.db");	
+					$query = "select * from ATMEGA8_Data";
+					$res =  $db->query($query) or die;
+					$count = $db->querySingle("SELECT COUNT(*) as count FROM ATMEGA8_Data");
+					
+					if($count > 0)
+					{	        		
+						while ($dsatz = $res->fetchArray(SQLITE3_ASSOC))
+						{
+							echo "<tr><td>" . $dsatz["id"] . "</td><td>"
+									. $dsatz["Date"] . "</td><td>" 
+									. round($dsatz["Temperature"],2) . "</td><td>" 
+									. $dsatz["Pressure"] . "</td><td>"
+									. $dsatz["ADCValue"] . "</td></tr>";
+									
+							$dataId = $dataId . '"' . $dsatz["id"] . '",';
+							$dataDate = $dataDate . '"' . $dsatz["Date"] . '",';
+							$dataTemperature = $dataTemperature . '"' . round($dsatz["Temperature"],2) . '",';
+							$dataPressure = $dataPressure . '"' . $dsatz["Pressure"] . '",';
+							$dataADCValue = $dataADCValue . '"' . $dsatz["ADCValue"] . '",';
+						}
+					}
+					else 
+					{	
+						echo "0 results";
+					}
+					$db->close();
+				?>
+			</table>
+		</details>
+		<br> 
+		<details style="margin-left:200px">
+			<button onclick="resetZoomChart()">Reset Zoom</button>
+			<hr>
+			<summary>Data history - Graph</summary>
+			<p>
+				<div class="chart-container">
+					<canvas id="line-chart"></canvas>
+				</div>
+			</p>
+		</details>
+	</body>
+	<!-- for the sidebar -->
+	<script src="js/dropdown.js"></script>
+	<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>-->
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js" 
+	integrity="sha512-QSkVNOCYLtj73J4hbmVoOV6KVZuMluZlioC+trLpewV8qMjsWqlIQvkn1KGX2StWvPMdWGBqim1xlC8krl1EKQ==" 
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" 
+	integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g==" 
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.2.1/chartjs-plugin-zoom.min.js" 
+	integrity="sha512-klQv6lz2YR+MecyFYMFRuU2eAl8IPRo6zHnsc9n142TJuJHS8CG0ix4Oq9na9ceeg1u5EkBfZsFcV3U7J51iew==" 
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+	<script>
+		var myChart= new Chart(document.getElementById("line-chart"), {
+			type: 'line',
+			data: {
+				labels: [<?php echo $dataDate; ?>],
+					datasets: [{ 
+						data: [<?php echo $dataTemperature; ?>],
+						label: "temperature [°C]",
+						borderColor: "#8e5ea2",
+						fill: false
+					}, { 
+						data: [<?php echo $dataPressure; ?>],
+						label: "pressure [Pa]",
+						borderColor: "#3cba9f",
+						fill: false
+					}, { 
+						data: [<?php echo $dataADCValue; ?>],
+						label: "ADCValue",
+						borderColor: "#e8c3b9",
+						fill: false
+					}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					zoom: {
+						pan: {
+							enabled:true,
+							mode:'x',
+							threshold:10
+						},
+						zoom: {
+							wheel: {
+								enabled:true
+							}
+						}
+					}
+				}
+			}
+		});
+		
+		function resetZoomChart(){
+			myChart.resetZoom();
+		}
+		
+		Chart.register(zoomPlugin);
+		
+	</script>
+</html>
