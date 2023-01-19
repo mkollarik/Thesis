@@ -1,0 +1,105 @@
+/*
+	Copyright (c) 2011 by Ernst Buchmann 
+	
+	Code based on the work of Stefan Engelke and Brennan Ball
+	
+    Permission is hereby granted, free of charge, to any person 
+    obtaining a copy of this software and associated documentation 
+    files (the "Software"), to deal in the Software without 
+    restriction, including without limitation the rights to use, copy, 
+    modify, merge, publish, distribute, sublicense, and/or sell copies 
+    of the Software, and to permit persons to whom the Software is 
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be 
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+    DEALINGS IN THE SOFTWARE.
+
+    
+*/
+
+#ifndef _WL_MODULE_H_
+#define _WL_MODULE_H_
+
+#include <avr/io.h>
+
+//Externe Variable deklarieren
+extern volatile uint8_t PTX;
+
+// WL-Module settings
+#define wl_module_CH			2
+#define wl_module_PAYLOAD		16
+#define wl_module_RF_DR_HIGH	0		//0 = 1Mbps, 1 = 2Mpbs
+#define wl_module_RF_SETUP		(RF_SETUP_RF_PWR_18 | RF_SETUP_RF_DR_250)	//RF_SETUP_RF_PWR_0 --> 0dBm ; RF_SETUP_RF_PWR_18 --> -18dBm ;; RF_SETUP_RF_DR_250 --> Datarate 250kbps
+#define wl_module_CONFIG		( (1<<MASK_RX_DR) | (1<<EN_CRC) | (1<<CRCO) )
+#define wl_module_TX_NR_0		0
+#define wl_module_TX_NR_1		1
+#define wl_module_TX_NR_2		2
+#define wl_module_TX_NR_3		3
+#define wl_module_TX_NR_4		4
+#define wl_module_TX_NR_5		5
+
+// Pin definitions for chip select and chip enabled of the wl-module
+#define CE  PB0
+#define CSN PB1
+
+// Definitions for selecting and enabling wl_module module
+#define wl_module_CSN_hi     PORTB |=  (1<<CSN);
+#define wl_module_CSN_lo     PORTB &= ~(1<<CSN);
+#define wl_module_CE_hi      PORTB |=  (1<<CE);
+#define wl_module_CE_lo      PORTB &= ~(1<<CE);
+
+// Defines for setting the wl_module registers for transmitting or receiving mode
+#define TX_POWERUP wl_module_config_register(CONFIG, wl_module_CONFIG | ( (1<<PWR_UP) | (0<<PRIM_RX) ) )
+#define RX_POWERUP wl_module_config_register(CONFIG, wl_module_CONFIG | ( (1<<PWR_UP) | (1<<PRIM_RX) ) )
+
+// Public standard functions
+extern void wl_module_init();
+extern void wl_module_config();
+extern void wl_module_send(uint8_t * value, uint8_t len);
+extern void wl_module_set_RADDR(uint8_t * adr);
+extern void wl_module_set_TADDR(uint8_t * adr);
+extern uint8_t wl_module_data_ready();
+//extern void wl_module_get_data(uint8_t * data);
+extern uint8_t wl_module_get_data(uint8_t * data);			//Gibt die Werte des STATUS-Registers zurück
+
+//Public functions
+
+extern uint8_t wl_module_get_status();
+extern uint8_t wl_module_get_rx_pipe_reading_status();
+extern uint8_t wl_module_get_one_byte(uint8_t command);
+extern void wl_module_set_rx_pw(unsigned char payloadwidth, unsigned char rxpipenum);
+extern uint8_t wl_module_get_rx_pw(uint8_t rxpipenum);
+extern void wl_module_set_tx_addr(uint8_t * address, uint8_t len);
+extern void wl_module_set_rx_addr(uint8_t * address, uint8_t len, uint8_t rxpipenum);
+extern void wl_module_tx_config(uint8_t tx_nr);
+extern void wl_module_rx_config();
+extern void wl_module_get_rx_addr(uint8_t * data, uint8_t rxpipenum, uint8_t len);
+extern uint8_t wl_module_get_rx_pipe();
+extern uint8_t wl_module_get_rx_pipe_from_status(uint8_t status);
+extern uint8_t wl_module_fifo_tx_empty();	//returns true if TX_EMPTY bit in FIFO_STATUS register is set, false otherwise
+extern uint8_t wl_module_fifo_rx_empty();
+extern uint8_t wl_module_get_rf_ch();
+extern uint8_t wl_module_get_rf_setup();
+extern uint8_t wl_module_get_plos_cnt();
+extern uint8_t wl_module_get_arc_cnt();
+extern void wl_module_set_as_tx();			//activate module with existing config
+extern void wl_module_power_down();			//powers down the module with existing config
+extern void wl_module_power_up();			//powers up the module with existing config
+
+// Public extended functions
+extern void wl_module_config_register(uint8_t reg, uint8_t value);
+extern void wl_module_read_register(uint8_t reg, uint8_t * value, uint8_t len);
+extern void wl_module_write_register(uint8_t reg, uint8_t * value, uint8_t len);
+
+extern void wl_module_sendmydata(uint8_t * value, uint8_t len);
+
+#endif /* _SETUP_NRF24L01_H_ */
