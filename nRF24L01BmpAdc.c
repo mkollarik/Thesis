@@ -25,7 +25,7 @@
 					//1...8sec
 					//5...40sec
 					//15...2min
-					//60...10min
+					//75...10min
 
 volatile uint8_t timercounter=0;
 
