@@ -645,6 +645,8 @@ public:
    * @return true if this is a legitimate radio 
    */
   bool isValid() { return ce_pin != 0xff && csn_pin != 0xff; } 
+ 
+  void maskIRQ(bool tx, bool fail, bool rx);
 
   /**@}*/
 };
