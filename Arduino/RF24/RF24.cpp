@@ -984,3 +984,12 @@ void RF24::setRetries(uint8_t delay, uint8_t count)
 
 // vim:ai:cin:sts=2 sw=2 ft=cpp
 
+/****************************************************************************/
+void RF24::maskIRQ(bool tx, bool fail, bool rx)
+{
+    /* clear the interrupt flags */
+    uint8_t config_reg = static_cast<uint8_t>(read_register(CONFIG) & ~(1 << MASK_MAX_RT | 1 << MASK_TX_DS | 1 << MASK_RX_DR));
+    /* set the specified interrupt flags */
+    config_reg = static_cast<uint8_t>(read_register(CONFIG) | fail << MASK_MAX_RT | tx << MASK_TX_DS | rx << MASK_RX_DR);
+    write_register(CONFIG, config_reg);
+}
