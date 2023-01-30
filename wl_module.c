@@ -79,12 +79,10 @@ void wl_module_config()
 {
     // Set RF channel
     wl_module_config_register(RF_CH,wl_module_CH);
-	// Set data speed & Output Power configured in wl_module.h
-	wl_module_config_register(RF_SETUP,wl_module_RF_SETUP);
-	// Set length of incoming payload 
+    // Set data speed & Output Power configured in wl_module.h
+    wl_module_config_register(RF_SETUP,wl_module_RF_SETUP);
+    // Set length of incoming payload 
     wl_module_config_register(RX_PW_P0, wl_module_PAYLOAD);
-	
-	//wl_module_config_register(EN_AA,0x00);//???????????????????????? wenn kein empfänger stuck im senden muss behoben werden dringends
 	
     // Start receiver 
     PTX = 0;        // Start in receiving mode
@@ -246,16 +244,11 @@ extern void wl_module_set_as_tx()
 extern void wl_module_power_down()
 {
 	unsigned char config;
-	
 	wl_module_read_register(CONFIG, &config, 1);
-	
 	//if((config & CONFIG_PWR_UP) == 0)
 	//	return;
-	
 	config &= (~CONFIG_PWR_UP);
-	
 	wl_module_write_register(CONFIG, &config, 1);
-	
 	wl_module_CE_lo;
 }
 
@@ -267,7 +260,6 @@ extern void wl_module_power_down()
 extern void wl_module_power_up()
 {
 	unsigned char config;
-	
 	wl_module_read_register(CONFIG, &config, 1);
 	//if(((config && CONFIG_PWR_UP)!=0) && ((config && PRIM_RX) = 0))
 	//	return;//already in TX
@@ -277,9 +269,7 @@ extern void wl_module_power_up()
 	_delay_us(300);
 }
 
-
 /*
-
 extern void wl_module_power_down()
 {
 	wl_module_CE_lo;
@@ -533,6 +523,6 @@ void wl_module_send(uint8_t * value, uint8_t len)
     wl_module_CSN_hi;                    // Pull up chip select
     
     wl_module_CE_hi;                     // Start transmission
-	_delay_us(10);						// green module doesn't work with 10µs delay
+	_delay_us(10);						// green module doesn't work with 10Âµs delay
 	wl_module_CE_lo;
 }
