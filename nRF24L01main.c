@@ -36,9 +36,14 @@ int main(void)
 	uint8_t key[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}; //aes encryption key
 	uint8_t expandedKey[240]; //aes encryption help variable
 	uint8_t tmpOutput[16]; //encrypted data
+	uint8_t firststartup=1; 
 									
 	wl_module_init();	//initialize nRF24L01+ module
 	_delay_ms(50);		//wait 50ms for nRF24L01+ module to stabilize signals
+	
+	DDRD &= 0b00000100; //pull unused pins to high using internal pull-ups
+			    //otherwise pins are left floating drawing unnecessary current
+	PORTD |= 0b11111011;
 	
 	ASSR |= (1<<AS2); //enable asynchron mode - clock timer/counter2 from crystal oscillator connected to the TOSC1 pin
 	TCCR2 |= (1<<CS22)|(1<<CS21)|(1<<CS20); //set prescaler to 1024 
@@ -59,17 +64,21 @@ int main(void)
 		while((ASSR & (1<< OCR2UB))); //wait for end of access
 			
 		set_sleep_mode(SLEEP_MODE_PWR_SAVE); //set sleep mode power-save
-		sleep_enable();	//enable sleep mode
+		//sleep_enable();	//enable sleep mode
 		sleep_mode(); //change into sleep mode
-		sleep_disable(); //first thing after waking from sleep:
+		//sleep_disable(); //first thing after waking from sleep:
 		
-		if(timercounter>(SENDRATE-1)) //check if enough time has passed to send next package			
+		if((timercounter>(SENDRATE-1))||firststartup) //check if enough time has passed to send next package			
 		{
+			if(firststartup){firststartup=0;}
 			timercounter = 0; //reset timercounter
 			
 			//twi module reset otherwise twi doesnt work after power-save
 			TWCR &= ~((1 << TWSTO) | (1 << TWEN));
 			TWCR |= (1 << TWEN);
+			
+			//reactivate SPI module after power save
+			SPCR |=(1<<SPE);
 			
 			for(k=0; k<=wl_module_PAYLOAD-1; k++) //initialize payload with dummy data
 			{
@@ -77,6 +86,13 @@ int main(void)
 			}
 					
 			payload[0] = maincounter; //first byte indicates which package (resets after 250)
+			
+			maincounter++; //increment package id
+			
+			if (maincounter >250) //reset package id after 250
+			{
+				maincounter = 0;
+			}
 			
 			//aes encryption
 			aes_expandKey(key, expandedKey, sizeof(expandedKey), AES_TYPE_128);
@@ -86,12 +102,8 @@ int main(void)
 			wl_module_send(tmpOutput,wl_module_PAYLOAD); //transmit payload
 			wl_module_power_down(); //enter power_down
 			
-			maincounter++; //increment package id
-			
-			if (maincounter >250) //reset package id after 250
-			{
-				maincounter = 0;
-			}
+			TWCR &= ~((1 << TWSTO) | (1 << TWEN)); //deactivate TWI before going to sleep
+			SPCR &= ~(1<<SPE); //deactivate SPI before going to sleep
 		}
 	}
 }
