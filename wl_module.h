@@ -38,7 +38,7 @@ extern volatile uint8_t PTX;
 #define wl_module_CH			2
 #define wl_module_PAYLOAD		16
 #define wl_module_RF_DR_HIGH	0		//0 = 1Mbps, 1 = 2Mpbs
-#define wl_module_RF_SETUP		(RF_SETUP_RF_PWR_18 | RF_SETUP_RF_DR_250)	//RF_SETUP_RF_PWR_0 --> 0dBm ; RF_SETUP_RF_PWR_18 --> -18dBm ;; RF_SETUP_RF_DR_250 --> Datarate 250kbps
+#define wl_module_RF_SETUP		(RF_SETUP_RF_PWR_0 | RF_SETUP_RF_DR_250)	//RF_SETUP_RF_PWR_0 --> 0dBm ; RF_SETUP_RF_PWR_18 --> -18dBm ;; RF_SETUP_RF_DR_250 --> Datarate 250kbps
 #define wl_module_CONFIG		( (1<<MASK_RX_DR) | (1<<EN_CRC) | (1<<CRCO) )
 #define wl_module_TX_NR_0		0
 #define wl_module_TX_NR_1		1
@@ -69,7 +69,7 @@ extern void wl_module_set_RADDR(uint8_t * adr);
 extern void wl_module_set_TADDR(uint8_t * adr);
 extern uint8_t wl_module_data_ready();
 //extern void wl_module_get_data(uint8_t * data);
-extern uint8_t wl_module_get_data(uint8_t * data);			//Gibt die Werte des STATUS-Registers zurück
+extern uint8_t wl_module_get_data(uint8_t * data);			//Gibt die Werte des STATUS-Registers zurÃ¼ck
 
 //Public functions
 
