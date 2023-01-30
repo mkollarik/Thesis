@@ -1,4 +1,8 @@
 /*
+	wl_module.c
+	Modified by: Markus Kollarik
+	Date: 30th Jannuary 2023
+ 
 	Copyright (c) 2011 by Ernst Buchmann 
 	
 	Code based on the work of Stefan Engelke and Brennan Ball
@@ -22,10 +26,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, uint8_t(
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
     DEALINGS IN THE SOFTWARE.
-
-    
 */
-
+	
 #include "wl_module.h"
 #include "nRF24L01.h"
 #include "spi.h"
