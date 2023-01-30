@@ -37,7 +37,12 @@ int main(void)
 	uint8_t key[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}; //aes encryption key
 	uint8_t expandedKey[240]; //aes encryption help variable
 	uint8_t tmpOutput[16]; //encrypted data
+	uint8_t firststartup=1; 
 	
+	//splitting double format in 4 uint8_t parts (start with array[3])
+	//wiki ieee 754 18.4 = 01000001 10010011 00110011 00110011
+	//                     65       147      51       51
+	//                     a[3]     a[2]     a[1]     a[0]
 	union Temp
 	{
 		double dtemp;
@@ -57,6 +62,12 @@ int main(void)
 	}adcdata;
 	
 	DDRC |= (1 << PC1)|(1 << PC3);           // Setup PC1 (LED) as output ; PC3 (ADC Switch on/off)
+	
+	DDRD &= 0b00000100;						//Pull unused pins to high using internal pull-ups
+	PORTD |= 0b11111011;
+	
+	DDRC &= ~(1<<PC0);
+	PORTC |= (1<<PC0);
 	
 	ADMUX = (1<<REFS1)|(1<<REFS0)|(1<<MUX1); //Internal 2.56V Voltage Reference with external capacitor at AREF pin and ADC2
 	ADCSRA = (1<<ADEN)|(1<<ADPS2);	// Enable ADC, set prescaler to 16
@@ -90,17 +101,21 @@ int main(void)
 		while((ASSR & (1<< OCR2UB)));   // wait for end of access
 			
 		set_sleep_mode(SLEEP_MODE_PWR_SAVE); //set sleep mode power-save
-		sleep_enable();	//enable sleep mode
+		//sleep_enable();	//enable sleep mode
 		sleep_mode(); //change into sleep mode
-		sleep_disable(); //first thing after waking from sleep:
+		//sleep_disable(); //first thing after waking from sleep:
 		
-		if(timercounter>(SENDRATE-1)) //check if enough time has passed to send next package			
+		if((timercounter>(SENDRATE-1))||firststartup) //check if enough time has passed to send next package			
 		{
+			if(firststartup){firststartup=0;}
 			timercounter = 0; //reset timercounter
 			
 			//twi module reset otherwise twi doesnt work after power save
 			TWCR &= ~((1 << TWSTO) | (1 << TWEN));
 			TWCR |= (1 << TWEN);
+			
+			//reactivate SPI module after power save
+			SPCR |=(1<<SPE);
 			
 			for (k=0; k<=wl_module_PAYLOAD-1; k++) //initialize payload with dummy data
 			{
@@ -123,6 +138,13 @@ int main(void)
 			
 			payload[0] = maincounter; //update id, to show which package send
 			
+			maincounter++; //increment package id
+			
+			if (maincounter>250) //reset package id after 250
+			{
+				maincounter = 0;
+			}
+			
 			for(uint8_t i=0; i<4; ++i) //payload data 1:4 represents temperature / 4=MSB : little-endian
 			{
 				payload[i+1]=temp.itemp[i];
@@ -144,12 +166,8 @@ int main(void)
 			wl_module_send(tmpOutput,wl_module_PAYLOAD); //transmit payload
 			wl_module_power_down(); //enter power_down
 			
-			maincounter++; //increment package id
-			
-			if (maincounter >250) //reset package id after 250
-			{
-				maincounter = 0;
-			}
+			TWCR &= ~((1 << TWSTO) | (1 << TWEN)); //deactivate TWI before going to sleep
+			SPCR &= ~(1<<SPE); //deactivate SPI before going to sleep
 		}
 	}
 }
@@ -197,7 +215,3 @@ ISR(INT0_vect)
 	}
 	
 }
-	//splitting double format in 4 uint8_t parts (start with array[3])
-	//wiki ieee 754 18.4 = 01000001 10010011 00110011 00110011
-	//                     65       147      51       51
-	//                     a[3]     a[2]     a[1]     a[0]
