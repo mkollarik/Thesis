@@ -39,10 +39,6 @@ int main(void)
 	uint8_t tmpOutput[16]; //encrypted data
 	uint8_t firststartup=1; 
 	
-	//splitting double format in 4 uint8_t parts (start with array[3])
-	//wiki ieee 754 18.4 = 01000001 10010011 00110011 00110011
-	//                     65       147      51       51
-	//                     a[3]     a[2]     a[1]     a[0]
 	union Temp
 	{
 		double dtemp;
@@ -215,3 +211,8 @@ ISR(INT0_vect)
 	}
 	
 }
+
+	//splitting double format in 4 uint8_t parts (start with array[3])
+	//wiki ieee 754 18.4 = 01000001 10010011 00110011 00110011
+	//                     65       147      51       51
+	//                     a[3]     a[2]     a[1]     a[0]
