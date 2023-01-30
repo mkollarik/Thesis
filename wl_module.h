@@ -100,6 +100,4 @@ extern void wl_module_config_register(uint8_t reg, uint8_t value);
 extern void wl_module_read_register(uint8_t reg, uint8_t * value, uint8_t len);
 extern void wl_module_write_register(uint8_t reg, uint8_t * value, uint8_t len);
 
-extern void wl_module_sendmydata(uint8_t * value, uint8_t len);
-
 #endif /* _SETUP_NRF24L01_H_ */

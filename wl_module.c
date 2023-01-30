@@ -141,8 +141,8 @@ extern void wl_module_tx_config(uint8_t tx_nr)
 {
 	uint8_t tx_addr[5];
 	///////////////////
-	TX_POWERUP;
-	_delay_us(1500);					// only needed if chip power down
+	//TX_POWERUP;
+	//_delay_us(1500);					// only needed if chip power down
 	///////////////////
     // Set RF channel
     wl_module_config_register(RF_CH,wl_module_CH);
@@ -194,8 +194,8 @@ extern void wl_module_tx_config(uint8_t tx_nr)
 					break;
 			}
 	
-	PTX =0;
-	TX_POWERUP;
+	//PTX =0;
+	//TX_POWERUP;
 	/*
     // Start receiver 
     PTX = 0;        // Start in receiving mode
@@ -245,32 +245,36 @@ extern void wl_module_set_as_tx()
 
 extern void wl_module_power_down()
 {
-	wl_module_CE_lo;
-	
 	unsigned char config;
 	
 	wl_module_read_register(CONFIG, &config, 1);
 	
-	if((config & CONFIG_PWR_UP) == 0)
-		return;
+	//if((config & CONFIG_PWR_UP) == 0)
+	//	return;
 	
 	config &= (~CONFIG_PWR_UP);
 	
 	wl_module_write_register(CONFIG, &config, 1);
+	
+	wl_module_CE_lo;
 }
+
+//powers up the 24L01
+//this function takes the existing contents of the CONFIG register and simply
+//  sets the PWR_UP bit and clears the PRIM_RX bit in the CONFIG register.
+//Notice: https://github.com/dariosalvi78/nRF24/blob/master/nRF24.cpp
 
 extern void wl_module_power_up()
 {
 	unsigned char config;
 	
 	wl_module_read_register(CONFIG, &config, 1);
-	if(!(config & CONFIG_PWR_UP))
-	{
-		config |= (CONFIG_PWR_UP);
-		wl_module_write_register(CONFIG, &config, 1);
-		wl_module_CE_hi;// is jz chip enable bei power up doch wichtig?????????? WICHTIG!!!! fifo leeren siehe 439: https://github.com/dariosalvi78/nRF24/blob/master/nRF24.cpp
-		_delay_us(150);
-	}
+	//if(((config && CONFIG_PWR_UP)!=0) && ((config && PRIM_RX) = 0))
+	//	return;//already in TX
+	config = (config | CONFIG_PWR_UP) & ~PRIM_RX;
+	wl_module_write_register(CONFIG, &config, 1);
+	wl_module_CE_hi; 
+	_delay_us(300);
 }
 
 
@@ -513,10 +517,10 @@ void wl_module_send(uint8_t * value, uint8_t len)
 {
     while (PTX) {}                  // Wait until last paket is send
 
-    wl_module_CE_lo;
+    //wl_module_CE_lo;
 
     PTX = 1;                        // Set to transmitter mode
-    TX_POWERUP;                     // Power up
+    //TX_POWERUP;                     // Power up
 	//_delay_us(150);					// only needed if chip power down
     
     wl_module_CSN_lo;                    // Pull down chip select
@@ -529,34 +533,6 @@ void wl_module_send(uint8_t * value, uint8_t len)
     wl_module_CSN_hi;                    // Pull up chip select
     
     wl_module_CE_hi;                     // Start transmission
-	_delay_us(10);						// Grünes Modul funktioniert nicht mit 10µs delay
+	_delay_us(10);						// green module doesn't work with 10µs delay
 	wl_module_CE_lo;
-}
-
-void wl_module_sendmydata(uint8_t * value, uint8_t len) 
-{
-	while (PTX) {}                  // Wait until last paket is send
-		
-	wl_module_CE_lo;
-	
-	PTX = 1;                        // Set to transmitter mode
-	
-	TX_POWERUP;
-	
-	wl_module_CSN_lo;                    // Pull down chip select
-	spi_fast_shift( FLUSH_TX );     // Write cmd to flush tx fifo
-	wl_module_CSN_hi;                    // Pull up chip select
-	
-	_delay_us(150); //wait for the radio to power up
-	 
-	wl_module_CSN_lo;                    // Pull down chip select
-	spi_fast_shift( W_TX_PAYLOAD ); // Write cmd to write payload
-	spi_transmit_sync(value,len);   // Write payload
-	wl_module_CSN_hi;                    // Pull up chip select
-	 
-	wl_module_CE_hi;                     // Start transmission
-	_delay_us(15);						// Grünes Modul funktioniert nicht mit 10µs delay
-	wl_module_CE_lo;
-	
-	wl_module_power_down();
 }
