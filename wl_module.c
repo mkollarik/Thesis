@@ -152,8 +152,8 @@ extern void wl_module_tx_config(uint8_t tx_nr)
 	wl_module_config_register(CONFIG, wl_module_CONFIG);
     // Set length of incoming payload 
     //wl_module_config_register(RX_PW_P0, wl_module_PAYLOAD);
-	
-	wl_module_config_register(SETUP_RETR,(SETUP_RETR_ARD_750 | SETUP_RETR_ARC_1));
+	// Set maximal number of retransmissions
+	wl_module_config_register(SETUP_RETR,(SETUP_RETR_ARD_750 | SETUP_RETR_ARC_15));
 	
 	//set the TX address for the pipe with the same number as the iteration
 			switch(tx_nr)			
